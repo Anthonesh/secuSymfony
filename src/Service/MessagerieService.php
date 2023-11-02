@@ -53,4 +53,5 @@ class MessagerieService{
             return "Message could not be sent. Mailer Error: {$mail->ErrorInfo}";
         }
     } 
+
 }

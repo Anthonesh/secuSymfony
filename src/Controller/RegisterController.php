@@ -68,8 +68,9 @@ class RegisterController extends AbstractController
                 $destinataire = $user->getEmail();
         
                 $this->messagerie->sendMail($object, $content, $destinataire);
-        
-          
+
+
+                return $this->redirectToRoute('app_login');
             }
 
             }
@@ -95,12 +96,36 @@ class RegisterController extends AbstractController
              
                 $user->setActivated(true);
                 $this->em->flush();
-                
-            
+                  
                 return $this->redirectToRoute('app_login');
+
             } else {
               
                 return $this->redirectToRoute('app_register');
             }
+        }
+
+        
+        #[Route('/register/sendMail/{id}', name: 'app_send_mail_activate')]
+        public function sendMailActivation($id): Response
+        {
+    
+            $id = UtilsService::cleanInput($id);
+        
+            $user = $this->userRepository->find($id);
+        
+            if ($user) {
+                
+                $object = "Activation de compte";
+                $content = "<h1>Cliquez sur le lien ci-dessous pour activer votre compte :</h1>
+                    <a href='https://localhost:8000/register/activate/" . $user->getId() . "'>Activer</a>";
+                $destinataire = $user->getEmail();
+        
+                $this->messagerie->sendMail($object, $content, $destinataire);
+        
+                return $this->redirectToRoute('app_logout');
+            } else {
+                return $this->redirectToRoute('app_register');
+            }   
         }
     }

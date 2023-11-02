@@ -2,6 +2,9 @@
 
 namespace App\Security;
 
+use App\Controller\RegisterController;
+use App\Entity\User;
+use App\Repository\UserRepository;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -22,8 +25,11 @@ class AppAuthAuthenticator extends AbstractLoginFormAuthenticator
 
     public const LOGIN_ROUTE = 'app_login';
 
-    public function __construct(private UrlGeneratorInterface $urlGenerator)
+
+    public function __construct(private UrlGeneratorInterface $urlGenerator, private UserRepository $repo, private RegisterController $registerController)
     {
+        $this->repo = $repo;
+        $this->registerController = $registerController;
     }
 
     public function authenticate(Request $request): Passport
@@ -44,12 +50,30 @@ class AppAuthAuthenticator extends AbstractLoginFormAuthenticator
 
     public function onAuthenticationSuccess(Request $request, TokenInterface $token, string $firewallName): ?Response
     {
+        $email = $request->request->get('email');
+    
+        $user = $this->repo->findOneBy(['email' => $email]);
+
+        if (!$user) {
+            return new RedirectResponse($this->urlGenerator->generate('app_register'));
+        }
+    
+        if (!$user->isActivated()) {
+            $this->registerController->sendMailActivation($user->getId());
+    
+            return new RedirectResponse($this->urlGenerator->generate('app_logout'));
+        }
+    
+        return new RedirectResponse($this->urlGenerator->generate('app_login'));
+    
+
         if ($targetPath = $this->getTargetPath($request->getSession(), $firewallName)) {
             return new RedirectResponse($targetPath);
         }
 
         // For example:
-        return new RedirectResponse($this->urlGenerator->generate('app_login'));
+        
+        // return new RedirectResponse($this->urlGenerator->generate('app_login'));
         // throw new \Exception('TODO: provide a valid redirect inside '.__FILE__);
     }
 
