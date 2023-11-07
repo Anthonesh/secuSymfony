@@ -7,3 +7,7 @@ controllers:
 app_register:
     path: '/register'
     controller: App\Controller\RegisterController::addUser
+
+app_update_user:
+    path: '/register/update/{id}'
+    controller: 'App\Controller\RegisterController::updateUser'
